@@ -34,7 +34,8 @@ export class Notification implements OnInit {
             'http://localhost:8000/notifications'
         ).subscribe ({
             next: (success) => {
-                this.errorText.set('')
+                this.errorText.set('');
+
                 this.notificationList.set(success);
             },
             error: (error) => {

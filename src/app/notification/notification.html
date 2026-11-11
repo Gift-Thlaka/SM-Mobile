@@ -5,12 +5,17 @@
     <section>
 
         @for (notifi of notificationList(); track notifi.id) {
+
+            @if (notificationList.length === 0) {
+                <p>No tasks yet.</p>
+            }
         
             <div class="item">
                 <strong>{{notifi.name}}</strong>
                 <p>{{notifi.instruction}}</p>
                 <button type="button" (click)="updated(notifi.id)">Updated</button>
             </div>
+
         }
 
     </section>
