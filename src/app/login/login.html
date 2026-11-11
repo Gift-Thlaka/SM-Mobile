@@ -1,0 +1,25 @@
+<main>
+
+    <div>
+
+        <h1>Mobile Scanner</h1>
+
+
+        <form (ngSubmit)="login()">   
+            <errorBar [errorText]="errorText()"></errorBar>
+
+            <label>ID</label>
+            <input type="text" name="ID" placeholder="Employee ID" requred [(ngModel)]="loginData.employeeID">
+
+            <label>Password</label>
+            <input type="password" name="password" placeholder="Employee Password" required [(ngModel)]="loginData.password">
+
+            <button type="submit">Submit</button>
+
+        </form>
+
+        <strong>This application belongs to employees or store staff only</strong>
+    </div>
+
+</main>
+
