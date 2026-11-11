@@ -32,9 +32,30 @@ export class LoginScreen {
     };
 
     login(): void {
-        this.errorText.set('loggged in');
+        
+        if (this.loginData.employeeID === '') {
+            this.errorText.set('Enter your employee ID');
+            return;
+        };
 
-        this.router.navigate(['/dashboard']);
+        if (this.loginData.password === '') {
+            this.errorText.set('Enter your password');
+            return;
+        }
+
+        this.http.post(
+            'http://localhost:8000/login', this.loginData
+        ) .subscribe ({
+            next: (success) => {
+                this.errorText.set('');
+                this.router.navigate(['/dashboard']);
+            },
+            error: (error) => {
+                this.errorText.set(error.error?.detail || 'Failed to login');
+            }
+        });
+
+        
     }
 
 }
