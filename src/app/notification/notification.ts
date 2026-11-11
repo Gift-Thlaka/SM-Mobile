@@ -56,7 +56,7 @@ export class Notification implements OnInit {
             error: (error) => {
                 this.errorText.set(error.error?.detail || 'Failed to update inventory, try again.')
             }
-        })
+        });
     }
 
 }

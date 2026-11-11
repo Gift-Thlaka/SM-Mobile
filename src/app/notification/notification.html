@@ -6,7 +6,7 @@
 
         @for (notifi of notificationList(); track notifi.id) {
 
-            @if (notificationList.length === 0) {
+            @if (notificationList().length === 0) {
                 <p>No tasks yet.</p>
             }
         
