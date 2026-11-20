@@ -43,7 +43,7 @@ export class LoginScreen {
         }
 
         this.http.post<logIns>(
-            'http://localhost:8000/mobile-login', this.loginData
+            'https://sm-api-n27i.onrender.com/mobile-login', this.loginData
         ).subscribe({
             next: (success: any) => {
                 localStorage.setItem('E_id', success.E_id.toString());

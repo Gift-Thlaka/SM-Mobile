@@ -43,7 +43,7 @@ export class Notification implements OnInit {
         const E_id = localStorage.getItem("E_id");
 
         this.http.get<item[]>(
-            `http://localhost:8000/notifications/employee?E_id=${E_id}`
+            `https://sm-api-n27i.onrender.com/notifications/employee?E_id=${E_id}`
         ).subscribe({
             next: (success) => {
                 this.errorText.set('');
@@ -63,7 +63,7 @@ export class Notification implements OnInit {
         const E_id = localStorage.getItem("E_id");
 
         this.http.post(
-            'http://localhost:8000/notifications/take',
+            'https://sm-api-n27i.onrender.com/notifications/take',
             { N_id: N_id, E_id: Number(E_id) }
         ).subscribe({
             next: () => {
@@ -115,7 +115,7 @@ export class Notification implements OnInit {
         }
 
         this.http.post(
-            'http://localhost:8000/update-quantity',
+            'https://sm-api-n27i.onrender.com/update-quantity',
             {
                 E_id: Number(E_id),
                 P_id: selected.P_id,
@@ -147,7 +147,7 @@ export class Notification implements OnInit {
         }
 
         this.http.post(
-            'http://localhost:8000/complete-price-task',
+            'https://sm-api-n27i.onrender.com/complete-price-task',
             {
                 N_id: selected.N_id,
                 E_id: Number(E_id)
@@ -177,7 +177,7 @@ export class Notification implements OnInit {
         }
 
         this.http.post(
-            'http://localhost:8000/notifications/abandon',
+            'https://sm-api-n27i.onrender.com/notifications/abandon',
             {
                 N_id: selected.N_id,
                 E_id: Number(E_id)
