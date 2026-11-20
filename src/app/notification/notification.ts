@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from "@angular/common/http";
 
 import { ErrorBar } from "../errorBar/errorBar";
+import { LoadingBar } from '../loading/loading';
 
 interface item {
     N_id: number,
@@ -23,7 +24,7 @@ interface itemQuantity {
 @Component ({
     selector: 'notification',
     standalone: true,
-    imports: [ErrorBar, FormsModule],
+    imports: [ErrorBar, FormsModule, LoadingBar],
     templateUrl: './notification.html',
     styleUrls: ['./notification.css']
 })
@@ -33,6 +34,7 @@ export class Notification implements OnInit {
     constructor (private http: HttpClient, private router: Router) {}
 
     errorText = signal('');
+    loading = signal(false);
     notificationList = signal<item[]>([]);
 
     ngOnInit() {
@@ -42,18 +44,22 @@ export class Notification implements OnInit {
     getNotifications(): void {
         const E_id = localStorage.getItem("E_id");
 
+        this.loading.set(true);
+
         this.http.get<item[]>(
             `https://sm-api-n27i.onrender.com/notifications/employee?E_id=${E_id}`
         ).subscribe({
             next: (success) => {
                 this.errorText.set('');
                 this.notificationList.set(success);
+                this.loading.set(false);
             },
             error: (error) => {
                 const detail = error.error?.detail;
                 this.errorText.set(
                     typeof detail === 'string' ? detail : 'Failed to get notifications'
                 );
+                this.loading.set(false);
             }
         });
     }
@@ -61,6 +67,8 @@ export class Notification implements OnInit {
     selectedTask = signal<item | null>(null);
     takeTask(N_id: number): void {
         const E_id = localStorage.getItem("E_id");
+
+        this.loading.set(true);
 
         this.http.post(
             'https://sm-api-n27i.onrender.com/notifications/take',
@@ -78,6 +86,7 @@ export class Notification implements OnInit {
                 this.errorText.set('');
                 this.getNotifications();
                 this.openTask();
+                this.loading.set(false);
             },
             error: (error) => {
                 const detail = error.error?.detail;
@@ -85,6 +94,7 @@ export class Notification implements OnInit {
                     typeof detail === 'string' ? detail : 'Failed to take task, try again.'
                 );
                 this.getNotifications();
+                this.loading.set(false);
             }
         });
     }
@@ -114,6 +124,8 @@ export class Notification implements OnInit {
             return;
         }
 
+        this.loading.set(true);
+
         this.http.post(
             'https://sm-api-n27i.onrender.com/update-quantity',
             {
@@ -128,11 +140,13 @@ export class Notification implements OnInit {
                 this.closeTask();
                 this.selectedTask.set(null);
                 this.getNotifications();
+                this.loading.set(false);
             },
             error: (error) => {
                 this.errorText.set(
                     error.error?.detail || 'Failed to complete.'
                 );
+                this.loading.set(false);
             }
         });
     }
@@ -145,6 +159,7 @@ export class Notification implements OnInit {
             this.errorText.set('Employee or task not found.');
             return;
         }
+        this.loading.set(true);
 
         this.http.post(
             'https://sm-api-n27i.onrender.com/complete-price-task',
@@ -158,11 +173,13 @@ export class Notification implements OnInit {
                 this.closeTask();
                 this.selectedTask.set(null);
                 this.getNotifications();
+                this.loading.set(false);
             },
             error: (error) => {
                 this.errorText.set(
                     error.error?.detail || 'Failed to complete price task.'
                 );
+                this.loading.set(false);
             }
         });
     }
@@ -175,6 +192,8 @@ export class Notification implements OnInit {
             this.errorText.set('Employee or task not found.');
             return;
         }
+
+        this.loading.set(true);
 
         this.http.post(
             'https://sm-api-n27i.onrender.com/notifications/abandon',
@@ -189,11 +208,13 @@ export class Notification implements OnInit {
                 this.QuantUpdate.quantity = '';
                 this.errorText.set('');
                 this.getNotifications();
+                this.loading.set(false);
             },
             error: (error) => {
                 this.errorText.set(
                     error.error?.detail || 'Failed to abandon task.'
                 );
+                this.loading.set(false);
             }
         });
     }

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 
 import { ErrorBar } from '../errorBar/errorBar';
+import { LoadingBar } from '../loading/loading';
 
 interface logIns {
     employeeID: string,
@@ -15,7 +16,7 @@ interface logIns {
 @Component ({
     selector: 'app-login',
     standalone: true,
-    imports: [ErrorBar, FormsModule],
+    imports: [ErrorBar, FormsModule, LoadingBar],
     templateUrl: './login.html',
     styleUrls: ['./login.css']
 })
@@ -25,6 +26,7 @@ export class LoginScreen {
     constructor(private http: HttpClient, private router: Router) {}
 
     errorText = signal('');
+    loading = signal(false);
 
     loginData: logIns = {
         employeeID: '',
@@ -42,6 +44,8 @@ export class LoginScreen {
             return;
         }
 
+        this.loading.set(true);
+
         this.http.post<logIns>(
             'https://sm-api-n27i.onrender.com/mobile-login', this.loginData
         ).subscribe({
@@ -51,13 +55,14 @@ export class LoginScreen {
 
                 this.errorText.set('');
                 this.router.navigate(['/notifications']);
+                this.loading.set(false);
             },
             error: (error) => {
                 const detail = error.error?.detail;
                 this.errorText.set(
                     typeof detail === 'string' ? detail : 'Failed to login'
                 );
-                console.log('LOGIN ERROR:', error.error);
+                this.loading.set(false);
             }
         });
     }
