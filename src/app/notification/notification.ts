@@ -12,6 +12,7 @@ interface item {
     msg: string,
     price: string,
     quantity: string,
+    task_type: 'STOCK' | 'PRICE',
     barcode?: string,
     size?: string
 }
@@ -131,6 +132,36 @@ export class Notification implements OnInit {
             error: (error) => {
                 this.errorText.set(
                     error.error?.detail || 'Failed to complete.'
+                );
+            }
+        });
+    }
+
+    completePriceTask(): void {
+        const E_id = localStorage.getItem('E_id');
+        const selected = this.selectedTask();
+
+        if (!E_id || !selected) {
+            this.errorText.set('Employee or task not found.');
+            return;
+        }
+
+        this.http.post(
+            'http://localhost:8000/complete-price-task',
+            {
+                N_id: selected.N_id,
+                E_id: Number(E_id)
+            }
+        ).subscribe({
+            next: () => {
+                this.errorText.set('');
+                this.closeTask();
+                this.selectedTask.set(null);
+                this.getNotifications();
+            },
+            error: (error) => {
+                this.errorText.set(
+                    error.error?.detail || 'Failed to complete price task.'
                 );
             }
         });
