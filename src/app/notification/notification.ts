@@ -1,7 +1,12 @@
-import { Component, OnInit, signal } from "@angular/core";
+
+import { Component, OnInit, OnDestroy, signal } from "@angular/core";
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from "@angular/common/http";
+
+import { App } from '@capacitor/app';
+import { PluginListenerHandle } from '@capacitor/core';
+import { interval, Subscription } from 'rxjs';
 
 import { ErrorBar } from "../errorBar/errorBar";
 import { LoadingBar } from '../loading/loading';
@@ -17,6 +22,7 @@ interface item {
     barcode?: string,
     size?: string
 }
+
 interface itemQuantity {
     quantity: number | string;
 }
@@ -29,7 +35,7 @@ interface itemQuantity {
     styleUrls: ['./notification.css']
 })
 
-export class Notification implements OnInit {
+export class Notification implements OnInit, OnDestroy {
 
     constructor (private http: HttpClient, private router: Router) {}
 
@@ -37,14 +43,67 @@ export class Notification implements OnInit {
     loading = signal(false);
     notificationList = signal<item[]>([]);
 
-    ngOnInit() {
+    // Automatic notification refreshing
+    private polling?: Subscription;
+    private appListener?: PluginListenerHandle;
+    private isFetching = false;
+
+    async ngOnInit() {
         this.getNotifications();
+
+        this.startPolling();
+
+        this.appListener = await App.addListener('appStateChange', (state) => {
+
+            if (state.isActive) {
+                // Refresh immediately when user returns
+                this.getNotifications(false);
+
+                // Resume 5-second polling
+                this.startPolling();
+
+            } else {
+                // Stop polling when app goes to background
+                this.stopPolling();
+            }
+
+        });
     }
 
-    getNotifications(): void {
+    ngOnDestroy() {
+        this.stopPolling();
+
+        if (this.appListener) {
+            this.appListener.remove();
+        }
+    }
+
+    startPolling(): void {
+        // Prevent duplicate polling subscriptions
+        this.stopPolling();
+
+        this.polling = interval(5000).subscribe(() => {
+            this.getNotifications(false);
+        });
+    }
+
+    stopPolling(): void {
+        this.polling?.unsubscribe();
+        this.polling = undefined;
+    }
+
+    getNotifications(showLoading: boolean = true): void {
         const E_id = localStorage.getItem("E_id");
 
-        this.loading.set(true);
+        if (!E_id || this.isFetching) {
+            return;
+        }
+
+        this.isFetching = true;
+
+        if (showLoading) {
+            this.loading.set(true);
+        }
 
         this.http.get<item[]>(
             `https://sm-api-n27i.onrender.com/notifications/employee?E_id=${E_id}`
@@ -52,19 +111,30 @@ export class Notification implements OnInit {
             next: (success) => {
                 this.errorText.set('');
                 this.notificationList.set(success);
-                this.loading.set(false);
+                this.isFetching = false;
+
+                if (showLoading) {
+                    this.loading.set(false);
+                }
             },
             error: (error) => {
-                const detail = error.error?.detail;
-                this.errorText.set(
-                    typeof detail === 'string' ? detail : 'Failed to get notifications'
-                );
-                this.loading.set(false);
+                if (showLoading) {
+                    const detail = error.error?.detail;
+
+                    this.errorText.set(
+                        typeof detail === 'string' ? detail : 'Failed to get notifications'
+                    );
+
+                    this.loading.set(false);
+                }
+
+                this.isFetching = false;
             }
         });
     }
 
     selectedTask = signal<item | null>(null);
+
     takeTask(N_id: number): void {
         const E_id = localStorage.getItem("E_id");
 
@@ -90,6 +160,7 @@ export class Notification implements OnInit {
             },
             error: (error) => {
                 const detail = error.error?.detail;
+
                 this.errorText.set(
                     typeof detail === 'string' ? detail : 'Failed to take task, try again.'
                 );
@@ -100,17 +171,20 @@ export class Notification implements OnInit {
     }
 
     task = signal(false);
+
     openTask(): void {
         this.task.set(true);
     }
+
     closeTask(): void {
         this.task.set(false);
     }
+
     QuantUpdate: itemQuantity = {
         quantity: ''
     }
+
     quantityTask(): void {
-        
         if (this.QuantUpdate.quantity === null || this.QuantUpdate.quantity === undefined || this.QuantUpdate.quantity.toString().trim() === '') {
             this.errorText.set('Please enter new quantity on the shelf.');
             return;
@@ -159,6 +233,7 @@ export class Notification implements OnInit {
             this.errorText.set('Employee or task not found.');
             return;
         }
+
         this.loading.set(true);
 
         this.http.post(
