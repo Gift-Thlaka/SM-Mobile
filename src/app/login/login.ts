@@ -32,30 +32,34 @@ export class LoginScreen {
     };
 
     login(): void {
-        
-        if (this.loginData.employeeID === '') {
+        if (this.loginData.employeeID.trim() === '') {
             this.errorText.set('Enter your employee ID');
             return;
-        };
+        }
 
         if (this.loginData.password === '') {
             this.errorText.set('Enter your password');
             return;
         }
 
-        this.http.post(
-            'http://localhost:8000/login', this.loginData
-        ) .subscribe ({
-            next: (success) => {
+        this.http.post<logIns>(
+            'http://localhost:8000/mobile-login', this.loginData
+        ).subscribe({
+            next: (success: any) => {
+                localStorage.setItem('E_id', success.E_id.toString());
+                localStorage.setItem('S_id', success.S_id.toString());
+
                 this.errorText.set('');
-                this.router.navigate(['/dashboard']);
+                this.router.navigate(['/notifications']);
             },
             error: (error) => {
-                this.errorText.set(error.error?.detail || 'Failed to login');
+                const detail = error.error?.detail;
+                this.errorText.set(
+                    typeof detail === 'string' ? detail : 'Failed to login'
+                );
+                console.log('LOGIN ERROR:', error.error);
             }
         });
-
-        
     }
 
 }
