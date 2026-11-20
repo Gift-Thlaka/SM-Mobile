@@ -15,8 +15,8 @@ interface item {
     barcode?: string,
     size?: string
 }
-interface itemQuantity  {
-    quantity: string;
+interface itemQuantity {
+    quantity: number | string;
 }
 
 @Component ({
@@ -99,7 +99,8 @@ export class Notification implements OnInit {
         quantity: ''
     }
     quantityTask(): void {
-        if (this.QuantUpdate.quantity.trim() === '') {
+        
+        if (this.QuantUpdate.quantity === null || this.QuantUpdate.quantity === undefined || this.QuantUpdate.quantity.toString().trim() === '') {
             this.errorText.set('Please enter new quantity on the shelf.');
             return;
         }
@@ -136,11 +137,34 @@ export class Notification implements OnInit {
     }
 
     abandonTask(): void {
-        this.closeTask();
-        this.selectedTask.set(null);
-        this.QuantUpdate.quantity = '';
-        this.errorText.set('');
-        this.getNotifications();
+        const E_id = localStorage.getItem('E_id');
+        const selected = this.selectedTask();
+
+        if (!E_id || !selected) {
+            this.errorText.set('Employee or task not found.');
+            return;
+        }
+
+        this.http.post(
+            'http://localhost:8000/notifications/abandon',
+            {
+                N_id: selected.N_id,
+                E_id: Number(E_id)
+            }
+        ).subscribe({
+            next: () => {
+                this.closeTask();
+                this.selectedTask.set(null);
+                this.QuantUpdate.quantity = '';
+                this.errorText.set('');
+                this.getNotifications();
+            },
+            error: (error) => {
+                this.errorText.set(
+                    error.error?.detail || 'Failed to abandon task.'
+                );
+            }
+        });
     }
 
     logout(): void {

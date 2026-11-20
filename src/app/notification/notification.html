@@ -43,9 +43,15 @@
 
         <form (ngSubmit)="quantityTask()">
             <label>Quantity</label>
-            <input type="text" name="quantity" required placeholder="Enter new quantity" [(ngModel)]="QuantUpdate.quantity">
-
-            <div class="Btns">
+            <input
+                type="number"
+                name="quantity"
+                min="0"
+                step="1"
+                required
+                placeholder="Enter new quantity"
+                [(ngModel)]="QuantUpdate.quantity">  
+                <div class="Btns">
                 <button type="button" (click)="abandonTask()">Abandon</button>
                 <button type="submit">Submit</button>
             </div>
